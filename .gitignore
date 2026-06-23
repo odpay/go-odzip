@@ -1,0 +1,17 @@
+# Build output
+/odzip
+/cmd/odzip/odzip
+
+# Test artifacts
+*.odz
+*.out
+*.test
+
+# Go workspace / coverage
+go.work
+go.work.sum
+coverage.out
+*.prof
+
+# OS / editor
+.DS_Store
