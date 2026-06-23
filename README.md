@@ -121,8 +121,9 @@ The C sources are **vendored, not a submodule** — Go's module proxy ships only
 module's own tracked files, so a submodule would arrive empty for `go get` and
 the cgo build would fail. Instead the exact upstream commit is pinned in
 [`internal/libodzip/UPSTREAM_REF`](internal/libodzip/UPSTREAM_REF), and
-`scripts/sync-upstream.sh` reproduces or bumps it. The bindings track odzip
-`v1.0.3` (plus the decompress OOM hardening fix). See [`VENDOR.md`](VENDOR.md).
+`scripts/sync-upstream.sh` reproduces or bumps it. The bindings track the odzip
+**`v1.0.3`** release (the same artifact in Homebrew / the AUR). See
+[`VENDOR.md`](VENDOR.md).
 
 ## License
 

@@ -17,17 +17,16 @@ exact upstream revision is pinned and a sync script reproduces it.
 ## Pinned upstream revision
 
 `internal/libodzip/UPSTREAM_REF` records the exact odzip commit the sources were
-copied from. The current pin is:
+copied from. The current pin is the **`v1.0.3` release**:
 
 ```
-4bddebc4d1f47f767188c367f4485905adef9852   # v1.0.3 + 3 (incl. the decompress OOM hardening fix)
+8932f04e7c10d7246c48d50461c9077820fdae07   # tag v1.0.3
 ```
 
-The public API (`libodzip.h`: `odz_compress`, `odz_decompress`, `odz_strerror`,
-`odz_options_t`, and the `ODZ_*` codes) is identical to the `v1.0.3` release; the
-pin is 3 commits ahead only to include the decompress `comp_size > ODZ_BLOCK_SIZE`
-hardening. The vendored sources track `.odz` **format version 2**
-(`ODZ_FORMAT_VERSION`).
+The bindings track tagged odzip releases (the same artifact shipped via Homebrew
+and the AUR) rather than an arbitrary commit. The vendored sources track `.odz`
+**format version 2** (`ODZ_FORMAT_VERSION`). Bump to the next release with the
+sync script when upstream tags it.
 
 ## Files vendored from odpay/odzip
 
