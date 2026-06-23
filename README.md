@@ -104,11 +104,25 @@ odzip data.txt                  # auto-detect (-> data.txt.odz)
   requires seekable streams). For large or on-disk data, prefer the `*File`
   functions to avoid the extra copies.
 
-## How the C sources are vendored
+## Layout & vendored C
 
-`libodzip`'s C sources live alongside the Go code so the module is `go get`-able
-without a separate build step. See [`VENDOR.md`](VENDOR.md) for the exact file
-list and how to refresh them from upstream.
+```
+odzip.go, doc.go        pure-Go public API (package odzip)
+cmd/odzip/              installable CLI front-end
+internal/libodzip/      all cgo + vendored libodzip C sources (quarantined here)
+  ├─ shim.c/.h          hand-written cgo bridge
+  ├─ libodzip.go        the cgo binding
+  ├─ *.c / *.h          vendored verbatim from upstream odzip
+  └─ UPSTREAM_REF       the exact odzip commit those sources came from
+scripts/sync-upstream.sh   re-vendor from a pinned odzip ref
+```
+
+The C sources are **vendored, not a submodule** — Go's module proxy ships only a
+module's own tracked files, so a submodule would arrive empty for `go get` and
+the cgo build would fail. Instead the exact upstream commit is pinned in
+[`internal/libodzip/UPSTREAM_REF`](internal/libodzip/UPSTREAM_REF), and
+`scripts/sync-upstream.sh` reproduces or bumps it. The bindings track odzip
+`v1.0.3` (plus the decompress OOM hardening fix). See [`VENDOR.md`](VENDOR.md).
 
 ## License
 

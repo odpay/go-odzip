@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"runtime"
+
+	"github.com/odpay/go-odzip/internal/libodzip"
 )
 
 // Progress is an optional callback invoked while an operation runs. processed
@@ -27,6 +29,33 @@ type Options struct {
 	Progress Progress
 }
 
+// Error is a libodzip status code returned when an operation fails. The
+// package's exported sentinels (ErrIO, ErrOOM, ErrFormat, ErrCorrupt) are
+// values of this type, so callers can match them with errors.Is:
+//
+//	if errors.Is(err, odzip.ErrCorrupt) { ... }
+type Error int
+
+// libodzip error codes. These mirror the ODZ_ERR_* constants in libodzip.h.
+var (
+	ErrIO      = Error(libodzip.CodeIO)      // I/O failure reading or writing a stream
+	ErrOOM     = Error(libodzip.CodeOOM)     // memory allocation failed
+	ErrFormat  = Error(libodzip.CodeFormat)  // bad magic or unsupported format version
+	ErrCorrupt = Error(libodzip.CodeCorrupt) // data integrity error during decode
+)
+
+// Error returns libodzip's canonical message for the code.
+func (e Error) Error() string {
+	return "odzip: " + libodzip.Strerror(int(e))
+}
+
+func errFromCode(code int) error {
+	if code == libodzip.CodeOK {
+		return nil
+	}
+	return Error(code)
+}
+
 func resolveThreads(opts *Options) int {
 	n := 0
 	if opts != nil {
@@ -41,11 +70,11 @@ func resolveThreads(opts *Options) int {
 	return n
 }
 
-func progressOf(opts *Options) Progress {
-	if opts == nil {
+func progressOf(opts *Options) libodzip.Progress {
+	if opts == nil || opts.Progress == nil {
 		return nil
 	}
-	return opts.Progress
+	return libodzip.Progress(opts.Progress)
 }
 
 // CompressFile compresses srcPath into the .odz stream written to dstPath.
@@ -54,7 +83,7 @@ func progressOf(opts *Options) Progress {
 // created or truncated. This is the most efficient entry point — libodzip
 // streams both files in bounded memory with no intermediate copies.
 func CompressFile(dstPath, srcPath string, opts *Options) error {
-	return compressPath(dstPath, srcPath, resolveThreads(opts), progressOf(opts))
+	return errFromCode(libodzip.Compress(dstPath, srcPath, resolveThreads(opts), progressOf(opts)))
 }
 
 // DecompressFile decompresses the .odz stream at srcPath into dstPath.
@@ -62,7 +91,7 @@ func CompressFile(dstPath, srcPath string, opts *Options) error {
 // Argument order follows io.Copy: destination first, source second. dstPath is
 // created or truncated.
 func DecompressFile(dstPath, srcPath string, opts *Options) error {
-	return decompressPath(dstPath, srcPath, resolveThreads(opts), progressOf(opts))
+	return errFromCode(libodzip.Decompress(dstPath, srcPath, resolveThreads(opts), progressOf(opts)))
 }
 
 // Compress reads all of src, compresses it, and writes the .odz stream to dst.
